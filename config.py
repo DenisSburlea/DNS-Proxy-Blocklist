@@ -1,0 +1,4 @@
+LISTEN_HOST = "127.0.0.1"
+LISTEN_PORT = 5300      # portul de test
+UPSTREAM_HOST = "1.1.1.1"
+UPSTREAM_PORT = 53
