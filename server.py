@@ -1,5 +1,7 @@
 import socket
+
 from dnslib import DNSRecord
+
 import config
 
 
@@ -17,15 +19,19 @@ def forward(data):
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((config.LISTEN_HOST, config.LISTEN_PORT))
+    sock.settimeout(1)
     print(f"Ascult pe {config.LISTEN_HOST}:{config.LISTEN_PORT}")
     while True:
-        data, client = sock.recvfrom(4096)
+        try:
+            data, client = sock.recvfrom(4096)
+        except TimeoutError:
+            continue
         try:
             req = DNSRecord.parse(data)
             domain = str(req.q.qname).rstrip(".").lower()
             print(f"{client[0]} -> {domain}")
             sock.sendto(forward(data), client)
-        except Exception as e:
+        except Exception as e: #noqa: BLE001 - serverul nu trebuie sa cada la pachete malformate
             print("Eroare:", e)
 
 
