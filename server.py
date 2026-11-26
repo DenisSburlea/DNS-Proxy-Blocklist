@@ -1,19 +1,9 @@
 import socket
 
-from dnslib import DNSRecord
+from dnslib import RCODE, DNSRecord
 
 import config
-
-
-def forward(data):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(3)
-    try:
-        s.sendto(data, (config.UPSTREAM_HOST, config.UPSTREAM_PORT))
-        reply, _ = s.recvfrom(4096)
-        return reply
-    finally:
-        s.close()
+import resolver
 
 
 def main():
@@ -30,8 +20,13 @@ def main():
             req = DNSRecord.parse(data)
             domain = str(req.q.qname).rstrip(".").lower()
             print(f"{client[0]} -> {domain}")
-            sock.sendto(forward(data), client)
-        except Exception as e: #noqa: BLE001 - serverul nu trebuie sa cada la pachete malformate
+            reply_data = resolver.forward(data)
+            if reply_data is None:
+                reply = req.reply()
+                reply.header.rcode = RCODE.SERVFAIL
+                reply_data = reply.pack()
+            sock.sendto(reply_data, client)
+        except Exception as e:  # noqa: BLE001 - serverul nu trebuie sa cada la pachete malformate
             print("Eroare:", e)
 
 
