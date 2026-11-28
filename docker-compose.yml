@@ -1,0 +1,10 @@
+services:
+  dns-proxy:
+    build: .
+    environment:
+      LISTEN_HOST: "0.0.0.0"
+      LISTEN_PORT: "53"
+    ports:
+      - "127.0.0.1:5300:53/udp"
+    volumes:
+      - ./logs:/app/logs

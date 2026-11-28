@@ -5,6 +5,7 @@ from dnslib import QTYPE, RCODE, DNSRecord
 
 import blocklist
 import config
+import logger
 import resolver
 
 
@@ -27,6 +28,9 @@ def handle_query(data):
     return reply_data, "FORWARDED", domain, qtype
 
 
+logger.setup()
+
+
 def main():
     count = blocklist.load(config.BLOCKLIST_PATH)
     print(f"Blocklist: {count} domenii")
@@ -44,7 +48,7 @@ def main():
             reply_data, action, domain, qtype = handle_query(data)
             sock.sendto(reply_data, client)
             ms = (time.perf_counter() - start) * 1000
-            print(f"{client[0]} {qtype} {domain} {action} {ms:.1f}ms")
+            logger.log_query(client[0], domain, qtype, action, ms)
         except Exception as e:  # noqa: BLE001
             print("Eroare:", e)
 
